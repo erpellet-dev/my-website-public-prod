@@ -1,0 +1,60 @@
+# Simple workflow for deploying static content to GitHub Pages
+run-name: ${{ github.event.client_payload.message }}
+
+on:
+  # Runs on pushes targeting the default branch
+
+  # Trigger on repository dispatch events
+  repository_dispatch:
+    types: [deploy-pages]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  # Single deploy job since we're just deploying
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verifs
+        run: |
+          echo "Repository: ${{ github.event.client_payload.repository }}"
+          echo "Branch: ${{ github.event.client_payload.branch }}"
+          echo "Message: ${{ github.event.client_payload.message }}"
+      - name: Checkout source code
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.event.client_payload.repository }}
+          token: ${{ secrets.GH_PAGES_TOKEN }}
+          ref: ${{ github.event.client_payload.branch }}
+          path: src
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          # Upload content of public repository folder
+          path: 'src/public'
+          retention-days: 1 # default is 1 day
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
+        
+
